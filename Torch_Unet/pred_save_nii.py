@@ -160,11 +160,11 @@ model = CleanU_Net()
 nii_numpy = []
 nii_numpy_data = []
 nii_numpy_lab = []
-save_path = '/home/laisong/github/processed_acdc_dataset/nii/'
-result_path = '/home/laisong/github/Unet_Cardiac/Torch_Unet/result'
-experiment_name = '/result_backbone0'
+save_path = '/home/laisong/github/processed_acdc_dataset/nii'
+result_path = '/home/laisong/github/Unet_Cardiac/result'
+experiment_name = '/result_backbone0_prob0.67'
 pth_path = '/ckpt/model_best.pth'
-save_npy_path = '/home/laisong/github/Unet_Cardiac/Torch_Unet/Something_fortest/saved_npy'
+save_npy_path = '/home/laisong/github/Unet_Cardiac/saved_npy'
 #=======================================================================================================================
 # for i,batch in enumerate(test_loader_upload):
 #     data  = batch[0]
@@ -181,45 +181,44 @@ save_npy_path = '/home/laisong/github/Unet_Cardiac/Torch_Unet/Something_fortest/
 #=======================================================================================================================
 
 #=======================================================================================================================
-for batch in tqdm((train_loader)):
-    shape = batch[2]
-    print(shape)
-#     data = data.to('cuda')
-#     original_shape = batch[2]
-#     model_path = result_path + experiment_name + pth_path
-#     checkpoint = torch.load(model_path)
-#     model.load_state_dict(checkpoint['model_state'])
-#     model.to('cuda')
-#     model.eval()
-#     seg_out = model(data)[0]
-#     seg_out = F.softmax(seg_out, dim=1)
-#     _, preds = torch.max(seg_out, 1) # (1,256,256)
-#     preds = preds.squeeze()
-#     preds = preds.cpu()
-#     preds_as_numpy = preds.numpy()
-#     if np.sum(preds_as_numpy):
-#         preds_as_numpy = postprocess_prediction(preds_as_numpy)
-#
-#     nii_numpy.append(preds_as_numpy)
-#     print(i)
-# nii_numpy = np.array(nii_numpy)
-# nii_numpy = nii_numpy.astype(np.int16)
-# np.save(save_npy_path + experiment_name + '_upload.npy',nii_numpy)
-# nii_numpy = np.load(save_npy_path + experiment_name + '_upload.npy')
-# # print(nii_numpy.shape)
-# nii = sitk.GetImageFromArray(nii_numpy)
-#
-# sitk.WriteImage(nii, save_path + experiment_name + '_upload.nii.gz')
+for batch in tqdm((test_loader)):
+    # shape = batch[2]
+    # print(shape)
+    data = batch[0]
+    data = data.to('cuda')
+    original_shape = batch[2]
+    model_path = result_path + experiment_name + pth_path
+    checkpoint = torch.load(model_path)
+    model.load_state_dict(checkpoint['model_state'])
+    model.to('cuda')
+    model.eval()
+    seg_out = model(data)[0]
+    seg_out = F.softmax(seg_out, dim=1)
+    _, preds = torch.max(seg_out, 1) # (1,256,256)
+    preds = preds.squeeze()
+    preds = preds.cpu()
+    preds_as_numpy = preds.numpy()
+    if np.sum(preds_as_numpy):
+        preds_as_numpy = postprocess_prediction(preds_as_numpy)
+    nii_numpy.append(preds_as_numpy)
+nii_numpy = np.array(nii_numpy)
+nii_numpy = nii_numpy.astype(np.int16)
+np.save(save_npy_path + experiment_name + '.npy',nii_numpy)
+nii_numpy = np.load(save_npy_path + experiment_name + '.npy')
+# print(nii_numpy.shape)
+nii = sitk.GetImageFromArray(nii_numpy)
+
+sitk.WriteImage(nii, save_path + experiment_name + '.nii.gz')
 #=======================================================================================================================
 
-# pred = sitk.ReadImage(save_path + experiment_name + '.nii.gz')
-# pred_numpy = sitk.GetArrayFromImage(pred)
-# pred_tensor = torch.from_numpy(pred_numpy).unsqueeze(dim=1)
-# true = sitk.ReadImage(save_path+'total.nii.gz')
-# true_numpy = sitk.GetArrayFromImage(true)
-# true_tensor = torch.from_numpy(true_numpy).unsqueeze(dim=1)
-# lv,rv,myo = cal_perfer(make_one_hot(pred_tensor,num_classes=4),make_one_hot(true_tensor,num_classes=4))
-# print(lv,rv,myo,(lv+rv+myo)/3)
+pred = sitk.ReadImage(save_path + experiment_name + '.nii.gz')
+pred_numpy = sitk.GetArrayFromImage(pred)
+pred_tensor = torch.from_numpy(pred_numpy).unsqueeze(dim=1)
+true = sitk.ReadImage(save_path+'/total.nii.gz')
+true_numpy = sitk.GetArrayFromImage(true)
+true_tensor = torch.from_numpy(true_numpy).unsqueeze(dim=1)
+lv,rv,myo = cal_perfer(make_one_hot(pred_tensor,num_classes=4),make_one_hot(true_tensor,num_classes=4))
+print(experiment_name,':',lv,rv,myo,(lv+rv+myo)/3)
 # cleanUnet_GroupNorm:
 #     0.9281110291125365 0.8518843602703697 0.8812323948223711 0.8870759280684258 (no postprocess)
 #     0.9272031502565893 0.8581292277517463 0.8801480579810547 0.8884934786631301 (postprocess)
@@ -232,6 +231,8 @@ for batch in tqdm((train_loader)):
 #     0.9321287414997868 0.8582924146998778 0.8887431411372549 0.8930547657789732 (postprocess)
 # backbone0:
 #     0.9289842022628627 0.8583915506748259 0.8843547571222288 0.890576836686639 (postprocess)
+
+#/result_backbone0 : 0.9317439688483693 0.8536856795646007 0.8826269705092368 0.8893522063074023 (postprocess)
 #=======================================================================================================================
 # recover size
 # nii_numpy = np.load('backbone0_postprocess.npy')

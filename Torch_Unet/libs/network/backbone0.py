@@ -226,6 +226,7 @@ class CleanU_Net(nn.Module):
         self.Conv_up1_4 = Conv_up(self.filter*2, self.filter)
         self.up1 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
         self.Conv_out1 = nn.Conv2d(self.filter, out_channels, 1, padding=0, stride=1)
+        # self.Conv_out2 = nn.Conv2d(self.filter, out_channels, 1, padding=0, stride=1)
 
     def forward(self, x):
         x = hdc(x)
@@ -237,9 +238,10 @@ class CleanU_Net(nn.Module):
         x = self.Conv_up2(x, conv3)
         x1 = self.Conv_up1_3(x, conv2)
         x1 = self.Conv_up1_4(x1, conv1)
-        x1 = self.up1(x1)
-        x1 = self.Conv_out1(x1)
-        return [x1]
+        x1_ = self.up1(x1)
+        mask = self.Conv_out1(x1_)
+        # dist = self.Conv_out2(x1_)
+        return [mask]
 
 def count_param(model):
     param_count = 0
@@ -249,6 +251,9 @@ def count_param(model):
 
 
 if __name__ == "__main__":
+    a = np.array([1,3,1]).astype(float)
+    b = np.max(a)
+    print(np.max(a))
     def opCounter(model):
         type_size = 4  # float占据4个字节
         params = list(model.parameters())

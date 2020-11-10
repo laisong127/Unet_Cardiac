@@ -260,6 +260,12 @@ def spatialloss(p_pred,p_true):
 
 
     return loss
+def smooth_dist_loss(mask_true, mask_pred, grad_pred, dist_true):
+
+    loss = torch.abs(grad_pred)*torch.abs(mask_pred-mask_true)*(torch.exp(dist_true)-1)
+    loss = loss.mean()
+
+    return loss
 
 def soft_spatial_loss(y_pred,y_true,p_pred,p_true,l = 0.1):
 

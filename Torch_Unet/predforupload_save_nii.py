@@ -114,7 +114,7 @@ nii_numpy_data = []
 nii_numpy_lab = []
 save_path = '/home/laisong/github/processed_acdc_dataset/nii/upload'
 result_path = '/home/laisong/github/Unet_Cardiac/result'
-experiment_name = '/result_backbone0'
+experiment_name = '/result_backbone0_prob0.67'
 save_path = save_path + experiment_name + '/'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -178,7 +178,7 @@ for index_id,id in enumerate(ID):
         np.save(save_npy_path + experiment_name + '_' + str(id)+tye+'_upload.npy',nii_numpy)
         nii_numpy = np.load(save_npy_path + experiment_name + '_' +str(id)+tye+'_upload.npy')
         nii = sitk.GetImageFromArray(nii_numpy)
-        sitk.WriteImage(nii, save_path + 'patient%d'%id + '_%s_new.nii.gz'%tye)
+        sitk.WriteImage(nii, save_path + 'patient%d'%id + '_%s.nii.gz'%tye)
         mode_index += 1
 
 # print(split_json)

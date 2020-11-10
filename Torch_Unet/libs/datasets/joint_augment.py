@@ -83,11 +83,12 @@ class FixResize():
     
     def __call__(self, img=None, mask=None):
         if mask is None:
-            return img.resize(self.size, Image.BILINEAR)
-            # return img.resize(self.size, Image.NEAREST)
+            # return img.resize(self.size, Image.BILINEAR) # original
+            return img.resize(self.size, Image.NEAREST)
         if img is None:
             return mask.resize(self.size, Image.NEAREST)
-        return img.resize(self.size, Image.BILINEAR), mask.resize(self.size, Image.NEAREST)
+        # return img.resize(self.size, Image.BILINEAR), mask.resize(self.size, Image.NEAREST) # original
+        return img.resize(self.size, Image.NEAREST), mask.resize(self.size, Image.NEAREST)
 
 class Scale(object):
     def __init__(self, size):

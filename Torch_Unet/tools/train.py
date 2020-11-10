@@ -150,6 +150,8 @@ def create_model(cfg):
         train_func = getattr(mod_func, 'model_fn_decorator')
     if network == 'backbone0.CleanU_Net':
         train_func = getattr(mod_func, 'model_backbone0_decorator')
+    # if network == 'backbone0.CleanU_Net':
+    #     train_func = getattr(mod_func, 'model_backbone0dist_decorator') #add dist
     if network == 'unet.Isensee_U_Net':
         train_func = getattr(mod_func, 'model_fn_decorator')
 

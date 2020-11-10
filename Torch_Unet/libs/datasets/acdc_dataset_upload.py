@@ -34,7 +34,7 @@ class AcdcDataset(Dataset):
         original_shape = img.shape[:2]
 
         if self.joint_augment is not None:
-            img, img = self.joint_augment(img, img)
+            img, _ = self.joint_augment(img, img)
         if self.augment is not None:
             img = self.augment(img)
         pixcel_spacing = np.array(h5py.File(self.data_infos[index], 'r')['pixel_spacing'][()])

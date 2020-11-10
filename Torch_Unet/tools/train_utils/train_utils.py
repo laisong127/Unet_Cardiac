@@ -82,16 +82,16 @@ class Trainer():
         self.model.eval()
 
         eval_dict = {}
-        total_loss = 0
+        # total_loss = 0
 
         # eval one epoch
         if get_rank() == 0: print("evaluating...")
         for i, data in enumerate(d_loader, 0):
             self.optimizer.zero_grad()
 
-            loss, tb_dict, disp_dict = self.model_fn_eval(self.model, data, self.criterion, perfermance=True)
+            _, tb_dict, disp_dict = self.model_fn_eval(self.model, data, self.criterion, perfermance=True)
 
-            total_loss += loss.item()
+            # total_loss += loss.item() # removed total loss
 
             for k, v in tb_dict.items():
                 eval_dict[k] = eval_dict.get(k, 0) + v #key -- 字典中要查找的键,default -- 如果指定键的值不存在时，返回该默认值。
@@ -101,7 +101,7 @@ class Trainer():
         for k, v in tb_dict.items():
             eval_dict[k] = eval_dict.get(k, 0) / (i + 1)
         
-        return total_loss / (i+1), eval_dict, disp_dict
+        return _, eval_dict, disp_dict # remove total_loss / (i+1)
 
     def train(self, start_it, start_epoch, n_epochs, train_loader, test_loader=None,
               ckpt_save_interval=5, best_res=0):
@@ -131,26 +131,29 @@ class Trainer():
             self.logger.info('epoch:{}  lr:{}'.format(epoch, epoch_lr))
             train_start = time.time()
             for cur_it, batch in enumerate(train_loader):
-                cur_lr = self.lr_scheduler.get_lr()[0]
+                #=======================================================
+                if cur_it<0.1*len(train_loader): # use 0.1 training data
+                #========================================================
+                    cur_lr = self.lr_scheduler.get_lr()[0]
 
-                loss, tb_dict, disp_dict = self._train_it(batch, epoch)
-                it += 1
+                    loss, tb_dict, disp_dict = self._train_it(batch, epoch)
+                    it += 1
 
-                # print infos
-                if get_rank() == 0:
-                    print("Epoch/train:{}({:.0%})/{}({:.0%})".format(epoch, epoch/n_epochs,
-                                    cur_it, cur_it/len(train_loader)), end="")
-                    for k, v in disp_dict.items():
-                        print(", ", k+": {:.6}".format(v), end="")
-                    print("")
+                    # print infos
+                    if get_rank() == 0:
+                        print("Epoch/train:{}({:.0%})/{}({:.0%})".format(epoch, epoch/n_epochs,
+                                        cur_it, cur_it/len(train_loader)), end="")
+                        for k, v in disp_dict.items():
+                            print(", ", k+": {:.6}".format(v), end="")
+                        print("")
 
-                # tensorboard logs
-                if self.tb_log is not None:
-                    # self.tb_log.add_scalar("train_loss", loss, it)
-                    self.tb_log.add_scalar("train_loss", loss, it)
-                    self.tb_log.add_scalar("learning_rate", cur_lr, it)
-                    for key, val in tb_dict.items():
-                        self.tb_log.add_scalar('train_'+key, val, it)
+                    # tensorboard logs
+                    if self.tb_log is not None:
+                        # self.tb_log.add_scalar("train_loss", loss, it)
+                        self.tb_log.add_scalar("train_loss", loss, it)
+                        self.tb_log.add_scalar("learning_rate", cur_lr, it)
+                        for key, val in tb_dict.items():
+                            self.tb_log.add_scalar('train_'+key, val, it)
             train_end = time.time()
             train_epochtime = train_end - train_start
             train_time += train_epochtime
@@ -168,7 +171,7 @@ class Trainer():
             start_time = time.time()
             if (epoch % eval_frequency) == 0 and (test_loader is not None):
                 with torch.set_grad_enabled(False):
-                    val_loss, eval_dict, disp_dict = self.eval_epoch(test_loader)
+                    _, eval_dict, disp_dict = self.eval_epoch(test_loader) # removed val loss
 
                 if self.tb_log is not None:
                     for key, val in eval_dict.items():
